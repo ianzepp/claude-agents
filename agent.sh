@@ -53,7 +53,19 @@ EOF
     name=$(basename "$f" .md)
     # Skip documentation files (all caps)
     [[ "$name" =~ ^[A-Z]+$ ]] && continue
-    [[ -f "$f" ]] && echo "  $name"
+    if [[ -f "$f" ]]; then
+      # Extract description from frontmatter if present
+      if head -1 "$f" | grep -q '^---$'; then
+        desc=$(awk '/^---$/{n++;next} n==1 && /^description:/ {sub(/^description:[[:space:]]*/, ""); print; exit}' "$f")
+        if [[ -n "$desc" ]]; then
+          printf "  %-12s %s\n" "$name" "$desc"
+        else
+          echo "  $name"
+        fi
+      else
+        echo "  $name"
+      fi
+    fi
   done
   exit 0
 }
