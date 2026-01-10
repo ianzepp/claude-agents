@@ -11,6 +11,7 @@ while [[ -L "$SCRIPT" ]]; do
 done
 AGENTS_DIR="$(cd "$(dirname "$SCRIPT")" && pwd)"
 MODEL="sonnet"
+MODEL_EXPLICIT=false
 WORK_DIR="$(pwd)"
 AGENT=""
 AGENT_FILE=""
@@ -68,7 +69,7 @@ fi
 while [[ $# -gt 0 ]]; do
   case $1 in
     -a|--agent)   AGENT_FILE="$2"; shift 2 ;;
-    -m|--model)   MODEL="$2"; shift 2 ;;
+    -m|--model)   MODEL="$2"; MODEL_EXPLICIT=true; shift 2 ;;
     -d|--dir)     WORK_DIR="$2"; shift 2 ;;
     --mode)       MODE="$2"; shift 2 ;;
     --dispatch)   DISPATCH=true; shift ;;
@@ -125,7 +126,29 @@ fi
 
 # Extract prompt (skip YAML frontmatter if present)
 if head -1 "$AGENT_FILE" | grep -q '^---$'; then
+  # Verify closing delimiter exists
+  if ! tail -n +2 "$AGENT_FILE" | grep -q '^---$'; then
+    echo "Error: Unclosed YAML frontmatter in $AGENT_FILE" >&2
+    echo "  Expected closing '---' delimiter after opening frontmatter" >&2
+    exit 1
+  fi
+
   PROMPT="$(awk '/^---$/{n++;next} n>=2' "$AGENT_FILE")"
+
+  # Validate prompt isn't empty after parsing
+  if [[ -z "$PROMPT" ]]; then
+    echo "Error: Empty prompt after parsing frontmatter in $AGENT_FILE" >&2
+    echo "  Check that frontmatter is properly closed with '---' (no trailing whitespace)" >&2
+    exit 1
+  fi
+
+  # Parse model from frontmatter if -m flag was not explicitly provided
+  if [[ "$MODEL_EXPLICIT" == false ]]; then
+    FRONTMATTER_MODEL="$(awk '/^---$/{n++;next} n==1 && /^model:/ {gsub(/^[[:space:]]+|[[:space:]]+$/, "", $2); print $2}' "$AGENT_FILE")"
+    if [[ -n "$FRONTMATTER_MODEL" ]]; then
+      MODEL="$FRONTMATTER_MODEL"
+    fi
+  fi
 else
   PROMPT="$(cat "$AGENT_FILE")"
 fi
