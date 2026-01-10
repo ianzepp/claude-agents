@@ -49,7 +49,10 @@ Remote Execution:
 Available agents:
 EOF
   for f in "$AGENTS_DIR"/*.md; do
-    [[ -f "$f" ]] && echo "  $(basename "$f" .md)"
+    name=$(basename "$f" .md)
+    # Skip documentation files (all caps)
+    [[ "$name" =~ ^[A-Z]+$ ]] && continue
+    [[ -f "$f" ]] && echo "  $name"
   done
   exit 0
 }

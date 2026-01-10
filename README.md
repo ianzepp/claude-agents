@@ -66,6 +66,19 @@ agent cato --mode update "review PR #42"
 agent cato --dispatch --mode update "review PR #123"  # remote execution
 ```
 
+### diogenes
+**Free-spirit explorer.** Roams codebases with fresh eyes and suggests 2-3 unexpected improvements.
+
+Unconstrained blue-sky thinking. Examines code, architecture, git history, issues, PRs—anything that catches attention. Questions assumptions, identifies opportunities others miss.
+
+Use for: Fresh perspective on mature projects, finding hidden technical debt, discovering simplification opportunities
+
+```bash
+agent diogenes "explore this project and suggest improvements"
+agent diogenes --mode issue "find 2-3 things worth changing"
+agent diogenes --dispatch "what would you do differently here?"
+```
+
 ### claude
 **Pass-through.** Vanilla Claude with no special constraints. Use for ad-hoc tasks.
 
@@ -233,6 +246,7 @@ claude-agents/
   cato.md           # PR reviewer
   claude.md         # Pass-through (no constraints)
   columbo.md        # Root-cause investigator
+  diogenes.md       # Free-spirit explorer
   galen.md          # Test diagnostician
   titus.md          # TypeScript fixer
 ```
