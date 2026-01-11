@@ -108,16 +108,6 @@ if [[ -z "$GOAL" ]]; then
   exit 1
 fi
 
-# Validate mode
-case "$MODE" in
-  read|update|issue) ;;
-  *)
-    echo "Error: Invalid mode: $MODE" >&2
-    echo "Valid modes: read, update, issue" >&2
-    exit 1
-    ;;
-esac
-
 # Resolve agent file
 if [[ -n "$AGENT_FILE" ]]; then
   # --agent provided: use path directly
@@ -185,6 +175,16 @@ else
     MODE="read"
   fi
 fi
+
+# Validate mode (after parsing frontmatter and setting defaults)
+case "$MODE" in
+  read|update|issue) ;;
+  *)
+    echo "Error: Invalid mode: $MODE" >&2
+    echo "Valid modes: read, update, issue" >&2
+    exit 1
+    ;;
+esac
 
 cd "$WORK_DIR" || exit 1
 
