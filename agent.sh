@@ -16,7 +16,8 @@ WORK_DIR="$(pwd)"
 AGENT=""
 AGENT_FILE=""
 GOAL=""
-MODE="update"
+MODE=""
+MODE_EXPLICIT=false
 DISPATCH=false
 WORKER=""
 DRY_RUN=false
@@ -29,9 +30,9 @@ Usage: agent <name> [options] <goal>
 
 Options:
   -a, --agent <path>      Use agent prompt from file path
-  -m, --model <model>     Model to use (default: sonnet)
+  -m, --model <model>     Model to use (default from agent frontmatter or sonnet)
   -d, --dir <path>        Working directory (default: cwd)
-      --mode <mode>       Action mode: read, update (default), issue
+      --mode <mode>       Action mode (default from agent frontmatter or read)
       --dispatch          Run agent on remote worker (via cw dispatch)
   -w, --worker <id>       Specific worker to use (with --dispatch)
   -n, --dry-run           Show prompt without running claude
@@ -39,8 +40,11 @@ Options:
 
 Modes:
   read      Analyze and output report to stdout
-  update    Make changes directly (fix issues, update documents) [default]
+  update    Make changes directly (fix issues, update documents)
   issue     Create GitHub issues for findings
+
+Note: Each agent can specify a default mode in its frontmatter.
+      Use --mode to override the agent's default.
 
 Remote Execution:
   --dispatch runs the agent on a remote worker via claude-workers.
@@ -83,7 +87,7 @@ while [[ $# -gt 0 ]]; do
     -a|--agent)   AGENT_FILE="$2"; shift 2 ;;
     -m|--model)   MODEL="$2"; MODEL_EXPLICIT=true; shift 2 ;;
     -d|--dir)     WORK_DIR="$2"; shift 2 ;;
-    --mode)       MODE="$2"; shift 2 ;;
+    --mode)       MODE="$2"; MODE_EXPLICIT=true; shift 2 ;;
     --dispatch)   DISPATCH=true; shift ;;
     -w|--worker)  WORKER="$2"; shift 2 ;;
     -n|--dry-run) DRY_RUN=true; shift ;;
@@ -161,8 +165,25 @@ if head -1 "$AGENT_FILE" | grep -q '^---$'; then
       MODEL="$FRONTMATTER_MODEL"
     fi
   fi
+
+  # Parse mode from frontmatter if --mode flag was not explicitly provided
+  if [[ "$MODE_EXPLICIT" == false ]]; then
+    FRONTMATTER_MODE="$(awk '/^---$/{n++;next} n==1 && /^mode:/ {gsub(/^[[:space:]]+|[[:space:]]+$/, "", $2); print $2}' "$AGENT_FILE")"
+    if [[ -n "$FRONTMATTER_MODE" ]]; then
+      MODE="$FRONTMATTER_MODE"
+    fi
+  fi
+
+  # Default to 'read' mode if still not set
+  if [[ -z "$MODE" ]]; then
+    MODE="read"
+  fi
 else
   PROMPT="$(cat "$AGENT_FILE")"
+  # Default to 'read' mode if still not set
+  if [[ -z "$MODE" ]]; then
+    MODE="read"
+  fi
 fi
 
 cd "$WORK_DIR" || exit 1
