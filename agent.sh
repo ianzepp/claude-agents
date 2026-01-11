@@ -16,7 +16,7 @@ WORK_DIR="$(pwd)"
 AGENT=""
 AGENT_FILE=""
 GOAL=""
-MODE="read"
+MODE="update"
 DISPATCH=false
 WORKER=""
 DRY_RUN=false
@@ -31,15 +31,15 @@ Options:
   -a, --agent <path>      Use agent prompt from file path
   -m, --model <model>     Model to use (default: sonnet)
   -d, --dir <path>        Working directory (default: cwd)
-      --mode <mode>       Action mode: read (default), update, issue
+      --mode <mode>       Action mode: read, update (default), issue
       --dispatch          Run agent on remote worker (via cw dispatch)
   -w, --worker <id>       Specific worker to use (with --dispatch)
   -n, --dry-run           Show prompt without running claude
   -h, --help              Show this help
 
 Modes:
-  read      Analyze and output report to stdout (default)
-  update    Make changes directly (fix issues, update documents)
+  read      Analyze and output report to stdout
+  update    Make changes directly (fix issues, update documents) [default]
   issue     Create GitHub issues for findings
 
 Remote Execution:
